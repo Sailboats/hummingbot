@@ -3,7 +3,7 @@
 #################################
 
 # For more detailed information: https://docs.hummingbot.io
-template_version: 23
+template_version: 24
 
 # Exchange configs
 bamboo_relay_use_coordinator: false
@@ -86,6 +86,9 @@ bitfinex_secret_key: null
 okex_api_key: null
 okex_secret_key: null
 okex_passphrase: null
+
+bitglobal_api_key: null
+bitglobal_api_secret: null
 
 ascend_ex_api_key: null
 ascend_ex_secret_key: null
