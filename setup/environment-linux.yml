@@ -198,7 +198,7 @@ dependencies:
     - tornado==6.0.4
     - tox==3.13.2
     - traitlets==5.0.5
-    - twisted==19.10.0
+#    - twisted==19.10.0
     - txaio==20.1.1
     - typing-extensions==3.10.0.0
     - urllib3==1.25.8
@@ -215,6 +215,6 @@ dependencies:
     - mkdocs-material==4.3.1
     - pymdown-extensions==6.2
     - python-markdown-math==0.6
-    - git+https://github.com/CoinAlpha/python-signalr-client.git
+#    - git+https://github.com/CoinAlpha/python-signalr-client.git
     - https://hummingbot-python.s3-us-west-2.amazonaws.com/hummingsim-20210806-cp38-cp38-linux_x86_64.whl
 prefix: /home/paul/anaconda3/envs/hummingbot
