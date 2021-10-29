@@ -360,7 +360,7 @@ cdef class BitglobalExchange(ExchangeBase):
             try:
                 trading_rules.append(
                     TradingRule(trading_pair=info["symbol"],
-                                min_order_size=Decimal(_get_min_order_size(info["symbol"].split('-')[0], coinConfig)),
+                                min_order_size=Decimal(self._get_min_order_size(name=info["symbol"].split('-')[0], coinConfig=coinConfig)),
                                 # max_order_size=Decimal(info["max-order-amt"]), # It's 100,000 USDT, How to model that?
 #                                min_price_increment=Decimal(info["multiplierUp"]),
 #                                min_base_amount_increment=Decimal(info["multiplierUp"]),
