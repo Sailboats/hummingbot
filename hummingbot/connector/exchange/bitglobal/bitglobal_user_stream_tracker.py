@@ -31,7 +31,7 @@ class BitglobalUserStreamTracker(UserStreamTracker):
                  bitglobal_auth: Optional[BitglobalAuth] = None,
                  trading_pairs: Optional[List[str]] = [],
                  ):
-        self.logger().debug(f'__init__: bitglobal_auth = {bitglobal_auth}, trading_pairs = {trading_pairs}')
+        # self.logger().debug(f'__init__: bitglobal_auth = {bitglobal_auth}, trading_pairs = {trading_pairs}')
         super().__init__()
         self._ev_loop: asyncio.events.AbstractEventLoop = asyncio.get_event_loop()
         self._data_source: Optional[UserStreamTrackerDataSource] = None

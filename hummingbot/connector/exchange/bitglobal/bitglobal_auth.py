@@ -22,7 +22,7 @@ class BitglobalAuth:
         return cls._bitglobalau_logger
 
     def __init__(self, api_key: str, secret_key: str, passphrase: Optional[str] = None):
-        self.logger().debug(f'__init__: api_key = {api_key}, secret_key = {secret_key}')
+        # self.logger().debug(f'__init__: api_key = {api_key}, secret_key = {secret_key}')
         self.api_key: str = api_key
         self.secret_key: str = secret_key
         # self.passphrase: str = passphrase
@@ -65,7 +65,7 @@ class BitglobalAuth:
         return sorted_request
 
     def generate_rest_auth(self, data: Dict[str, str]) -> str:
-        self.logger().debug(f'generate_rest_auth: data = {data}')
+        # self.logger().debug(f'generate_rest_auth: data = {data}')
         data = list(data.items())
         data.sort()
         msg = '&'.join(['%s=%s' % (k, v) for k, v in data])
@@ -81,11 +81,11 @@ class BitglobalAuth:
         #         paramString += key
         #         paramString += "="
         #         paramString += str(data[key])
-        self.logger().debug(f"generate_rest_auth: msg = {msg}")
+        # self.logger().debug(f"generate_rest_auth: msg = {msg}")
         return self.get_sign(msg, self.secret_key)
 
     def generate_ws_auth(self):
-        self.logger().debug('generate_ws_auth:')
+        # self.logger().debug('generate_ws_auth:')
         timestamp = str(int(time.time()))
 
         return {

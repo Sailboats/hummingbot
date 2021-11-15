@@ -42,7 +42,7 @@ class BitglobalAPIOrderBookDataSource(OrderBookTrackerDataSource):
         return cls._bitglobalaobds_logger
 
     def __init__(self, trading_pairs: List[str], domain="com"):
-        self.logger().debug(f"__init__: trading_pairs = {trading_pairs}")
+        # self.logger().debug(f"__init__: trading_pairs = {trading_pairs}")
         super().__init__(trading_pairs)
         self._order_book_create_function = lambda: OrderBook()
         self._domain = domain
@@ -105,7 +105,7 @@ class BitglobalAPIOrderBookDataSource(OrderBookTrackerDataSource):
             return result
 
     async def get_new_order_book(self, trading_pair: str) -> OrderBook:
-        self.logger().debug(f'get_new_order_book: trading_pair = {trading_pair}')
+        # self.logger().debug(f'get_new_order_book: trading_pair = {trading_pair}')
         async with aiohttp.ClientSession() as client:
             snapshot: Dict[str, Any] = await self.get_snapshot(client, trading_pair, 1000, self._domain)
             snapshot_timestamp: float = time.time()
@@ -139,7 +139,7 @@ class BitglobalAPIOrderBookDataSource(OrderBookTrackerDataSource):
 
     async def listen_for_trades(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
         """Subscribes to the trade channel of the exchange. Adds incoming messages(of filled orders) to the output queue, to be processed by"""
-        self.logger().debug('listen_for_trades:')
+        # self.logger().debug('listen_for_trades:')
         while True:
             try:
                 # trading_pairs: List[str] = self._trading_pairs
@@ -222,7 +222,7 @@ class BitglobalAPIOrderBookDataSource(OrderBookTrackerDataSource):
                 return all_markets
 
     async def listen_for_order_book_diffs(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
-        self.logger().debug("listen_for_order_book_diffs:")
+        # self.logger().debug("listen_for_order_book_diffs:")
         while True:
             try:
                 # self.logger().debug("WS_BASE_ENDPOINT: ", WS_BASE_ENDPOINT)
@@ -280,7 +280,7 @@ class BitglobalAPIOrderBookDataSource(OrderBookTrackerDataSource):
                 await asyncio.sleep(30.0)
 
     async def listen_for_order_book_snapshots(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
-        self.logger().debug('listen_for_order_book_snapshots:')
+        # self.logger().debug('listen_for_order_book_snapshots:')
         while True:
             try:
                 async with aiohttp.ClientSession() as client:

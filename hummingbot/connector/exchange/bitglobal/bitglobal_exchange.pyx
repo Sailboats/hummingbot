@@ -112,7 +112,7 @@ cdef class BitglobalExchange(ExchangeBase):
                  order_book_tracker_data_source_type: OrderBookTrackerDataSourceType = OrderBookTrackerDataSourceType.EXCHANGE_API,
                  trading_pairs: Optional[List[str]] = None,
                  trading_required: bool = True):
-        self.logger().debug(f'__init__:bitglobal_api_key = {bitglobal_api_key}, trading_pairs = {trading_pairs}')
+#        self.logger().debug(f'__init__:bitglobal_api_key = {bitglobal_api_key}, trading_pairs = {trading_pairs}')
         super().__init__()
         # self._account_id = ""
         self._async_scheduler = AsyncCallScheduler(call_interval=0.5)
@@ -263,7 +263,8 @@ cdef class BitglobalExchange(ExchangeBase):
                            params: Optional[Dict[str, Any]] = {},
                            data={},
                            is_auth_required: bool = False) -> Dict[str, Any]:
-        self.logger().debug(f'_api_request: method = {method}, params = {params}, data = {data}, is_auth_required = {is_auth_required}')
+#        if path_url in {PLACE_ORDER, ORDER_CANCEL}:
+#            self.logger().debug(f'_api_request: method = {method}, params = {params}, data = {data}, is_auth_required = {is_auth_required}')
         headers = {"Content-Type": "application/json"}
 
         ts = str(int(DateTime.now().timestamp() * 1000))
@@ -284,7 +285,7 @@ cdef class BitglobalExchange(ExchangeBase):
 
         text_data = ujson.dumps(data) if data else None
 
-        self.logger().debug(f'attempt to request: method = {method.upper()}, url = {url}, headers = {headers}, params = {params}, data = {text_data}')
+#        self.logger().debug(f'attempt to request: method = {method.upper()}, url = {url}, headers = {headers}, params = {params}, data = {text_data}')
         response_coro = client.request(
             method=method.upper(),
             url=url,
@@ -294,12 +295,13 @@ cdef class BitglobalExchange(ExchangeBase):
         )
 
         async with response_coro as response:
-            self.logger().debug(f'response = {response}')
+#            self.logger().debug(f'response = {response}')
             if response.status != 200:
                 raise IOError(f"Error fetching data from {url}. Response: {await response.json()}.")
             try:
                 parsed_response = await response.json()
-                self.logger().debug(f'parsed_response = {parsed_response}')
+#                if path_url in {PLACE_ORDER, ORDER_CANCEL}:
+#                    self.logger().debug(f'parsed_response = {parsed_response}')
                 return parsed_response
             except Exception:
                 raise IOError(f"Error parsing data from {url}.")
@@ -326,7 +328,7 @@ cdef class BitglobalExchange(ExchangeBase):
         self._account_balances.clear()
 
         for balance in balances:
-            self._account_balances[balance['coinType']] = Decimal(balance['btcQuantity'])
+            self._account_balances[balance['coinType']] = Decimal(balance['count']) + Decimal(balance['frozen'])
             self._account_available_balances[balance['coinType']] = Decimal(balance['count'])
 
     cdef object c_get_fee(self,
@@ -362,10 +364,10 @@ cdef class BitglobalExchange(ExchangeBase):
                     TradingRule(trading_pair=info["symbol"],
                                 min_order_size=Decimal(self._get_min_order_size(name=info["symbol"].split('-')[0], coinConfig=coinConfig)),
                                 # max_order_size=Decimal(info["max-order-amt"]), # It's 100,000 USDT, How to model that?
-#                                min_price_increment=Decimal(info["multiplierUp"]),
-#                                min_base_amount_increment=Decimal(info["multiplierUp"]),
+                                min_price_increment=Decimal("0.00100000"),
+                                min_base_amount_increment=Decimal("0.10000000"),
                                 # min_quote_amount_increment=Decimal(info["1e-{info['value-precision']}"]),
-                                # min_notional_size=Decimal(info["min-order-value"])
+                                 min_notional_size=Decimal("10.00000000")
                                 # min_notional_size=s_decimal_0  # Couldn't find a value for this in the docs
                                 )
                 )
@@ -374,8 +376,10 @@ cdef class BitglobalExchange(ExchangeBase):
         return trading_rules
 
     def _get_min_order_size(self, name: str, coinConfig: List[Dict[str, Any]]) -> str:
+#        self.logger().info(f"_get_min_order_size:{name}")
         for c in coinConfig:
             if c['name'] == name:
+#                self.logger().info(f"_get_min_order_size:{name}:{c['minTxAmt']}")
                 return c['minTxAmt']
 
     async def get_order_status(self, exchange_order_id: str, trading_pair: str) -> Dict[str, Any]:
@@ -422,6 +426,7 @@ cdef class BitglobalExchange(ExchangeBase):
                 )
                 continue
 
+#            self.logger().debug(f'get_order_status: order_update = {order_update}')
             # Calculate the newly executed amount for this update.
             tracked_order.last_state = order_update["status"]
             new_confirmed_amount = Decimal(order_update["tradedNum"])
@@ -684,10 +689,10 @@ cdef class BitglobalExchange(ExchangeBase):
         timestamp = str(int(time.time()))
         data = {
             'symbol': trading_pair,
-            'type': f"{limit if order_type is OrderType.LIMIT else market}.",
-            'side': f"{buy if is_buy else sell}.",
-            'price': f"{price if order_type is OrderType.LIMIT else -1}.",
-            'quantity': amount,
+            'type': "limit" if order_type is OrderType.LIMIT else "market",
+            'side': "buy" if is_buy else "sell",
+            'price': str(price) if order_type is OrderType.LIMIT else "-1",
+            'quantity': str(amount),
             'timestamp': timestamp
         }
 
@@ -796,6 +801,7 @@ cdef class BitglobalExchange(ExchangeBase):
 
         try:
             exchange_order_id = await self.place_order(order_id, trading_pair, decimal_amount, False, order_type, decimal_price)
+#            self.logger().info(f"exchange_order_id = {exchange_order_id}")
             self.c_start_tracking_order(
                 client_order_id=order_id,
                 exchange_order_id=exchange_order_id,
@@ -807,6 +813,7 @@ cdef class BitglobalExchange(ExchangeBase):
             )
             tracked_order = self._in_flight_orders.get(order_id)
             if tracked_order is not None:
+#                self.logger().info(f"tracked_order = {tracked_order}")
                 self.logger().info(f"Created {order_type.name.upper()} sell order {order_id} for {decimal_amount} {trading_pair}.")
             self.c_trigger_event(self.MARKET_SELL_ORDER_CREATED_EVENT_TAG,
                                  SellOrderCreatedEvent(
@@ -851,12 +858,14 @@ cdef class BitglobalExchange(ExchangeBase):
             if tracked_order is None:
                 raise ValueError(f"Failed to cancel order - {order_id}. Order not found.")
 
+            order_id = await tracked_order.get_exchange_order_id()
             params = {
                 "orderId": order_id,
                 "symbol": trading_pair
             }
             response = await self._api_request("POST", path_url=ORDER_CANCEL, data=params, is_auth_required=True)
-
+            result_code = response['code']
+            self.logger().debug(f'cancel response = {response}, result_code = {result_code}' )
             if not response['code']=='0':
                 raise BitglobalAPIError("Order could not be canceled")
 
@@ -899,7 +908,7 @@ cdef class BitglobalExchange(ExchangeBase):
 
         for trading_pair in orders_by_trading_pair:
             cancel_order_ids = [o.exchange_order_id for o in orders_by_trading_pair[trading_pair]]
-            self.logger().debug(f"cancel_order_ids {cancel_order_ids} orders_by_trading_pair[trading_pair]")
+            self.logger().debug(f"cancel_order_ids {cancel_order_ids} orders_by_trading_pair{trading_pair}")
 
             data = {'ids': '','symbol': trading_pair}
             # TODO, check that only a max of 4 orders can be included per trading pair
@@ -949,6 +958,7 @@ cdef class BitglobalExchange(ExchangeBase):
                                 object trade_type,
                                 object price,
                                 object amount):
+#        self.logger().info(f"c_start_tracking_order: client_order_id = {client_order_id}, exchange_order_id = {exchange_order_id}")
         self._in_flight_orders[client_order_id] = BitglobalInFlightOrder(
             client_order_id=client_order_id,
             exchange_order_id=exchange_order_id,
@@ -974,27 +984,37 @@ cdef class BitglobalExchange(ExchangeBase):
         return Decimal(trading_rule.min_base_amount_increment)
 
     cdef object c_quantize_order_amount(self, str trading_pair, object amount, object price=s_decimal_0):
+#        self.logger().debug(f'c_quantize_order_amount:trading_pair = {trading_pair}, amount = {amount}, price = {price}')
         cdef:
             TradingRule trading_rule = self._trading_rules[trading_pair]
+#            print "trading_rule = {trading_rule}"
             object quantized_amount = ExchangeBase.c_quantize_order_amount(self, trading_pair, amount)
+#            printf "quantized_amount = {quantized_amount}"
             object current_price = self.c_get_price(trading_pair, False)
+#            printf "current_price = {current_price}"
             object notional_size
 
+#        self.logger().debug('begin quantize')
         # Check against min_order_size. If not passing check, return 0.
         if quantized_amount < trading_rule.min_order_size:
+#            self.logger().debug('quantized_amount < trading_rule.min_order_size')
             return s_decimal_0
 
         # Check against max_order_size. If not passing check, return maximum.
         if quantized_amount > trading_rule.max_order_size:
+#            self.logger().debug('quantized_amount > trading_rule.max_order_size')
             return trading_rule.max_order_size
 
         if price == s_decimal_0:
+#            self.logger().debug('price == s_decimal_0')
             notional_size = current_price * quantized_amount
         else:
+#            self.logger().debug('else')
             notional_size = price * quantized_amount
         # Add 1% as a safety factor in case the prices changed while making the order.
 
         if notional_size < trading_rule.min_notional_size * Decimal("1.01"):
+#            self.logger().debug('notional_size < trading_rule.min_notional_size * Decimal("1.01")')
             return s_decimal_0
 
         return quantized_amount

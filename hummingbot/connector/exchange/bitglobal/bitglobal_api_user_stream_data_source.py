@@ -51,7 +51,7 @@ class BitglobalAPIUserStreamDataSource(UserStreamTrackerDataSource):
         return self._last_recv_time
 
     async def _authenticate_client(self):
-        self.logger().debug('_authenticate_client:')
+        # self.logger().debug('_authenticate_client:')
         """
         Sends an Authentication request to OKEx's WebSocket API Server
         """
@@ -112,7 +112,7 @@ class BitglobalAPIUserStreamDataSource(UserStreamTrackerDataSource):
     # TODO needs testing, paper mode is not connecting for some reason
     async def listen_for_user_stream(self, ev_loop: asyncio.BaseEventLoop, output: asyncio.Queue):
         """Subscribe to user stream via web socket, and keep the connection open for incoming messages"""
-        self.logger().debug("listen_for_user_stream")
+        # self.logger().debug("listen_for_user_stream")
         while True:
             try:
                 if self._websocket_connection is not None:
@@ -154,7 +154,7 @@ class BitglobalAPIUserStreamDataSource(UserStreamTrackerDataSource):
                         self._last_recv_time = time.time()
 
                         # handle all the messages in the queue
-                        self.logger().debug(f"receive new message: {message}")
+                        # self.logger().debug(f"receive new message: {message}")
                         output.put_nowait(message)
 
             except asyncio.CancelledError:
