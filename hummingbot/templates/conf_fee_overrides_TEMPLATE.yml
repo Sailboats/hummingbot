@@ -3,7 +3,7 @@
 ########################################
 
 # For more detailed information: https://docs.hummingbot.io
-template_version: 13
+template_version: 14
 
 # Example of the fields that can be specified to override the `TradeFeeFactory` default settings.
 # If the field is missing or the value is left blank, the default value will be used.
@@ -16,10 +16,10 @@ template_version: 13
 # [exchange name]_maker_fixed_fees:  # a list of lists of token-fee pairs (e.g. [["ETH", 1]])
 # [exchange name]_taker_fixed_fees:  # a list of lists of token-fee pairs (e.g. [["ETH", 1]])
 
-binance_percent_fee_token:  # BNB
-binance_maker_percent_fee:  # 0.75
-binance_taker_percent_fee:  # 0.75
-binance_buy_percent_fee_deducted_from_returns:  # True
+binance_percent_fee_token:  BNB
+binance_maker_percent_fee:  0.75
+binance_taker_percent_fee:  0.75
+binance_buy_percent_fee_deducted_from_returns:  True
 
 # List of supported Exchanges for which the user's conf/conf_fee_override.yml
 # will work. This file currently needs to be in sync with hummingbot list of
@@ -242,3 +242,9 @@ wazirx_maker_percent_fee:
 wazirx_percent_fee_token:
 wazirx_taker_fixed_fees:
 wazirx_taker_percent_fee:
+changelly_buy_percent_fee_deducted_from_returns:
+changelly_maker_fixed_fees: 0.3
+changelly_maker_percent_fee:
+changelly_percent_fee_token:
+changelly_taker_fixed_fees: 0.4
+changelly_taker_percent_fee:
