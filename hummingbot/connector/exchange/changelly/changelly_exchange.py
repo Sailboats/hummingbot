@@ -8,14 +8,14 @@ from typing import TYPE_CHECKING, Any, AsyncIterable, Dict, List, Optional
 import aiohttp
 from async_timeout import timeout
 
-from hummingbot.connector.exchange.hitbtc.hitbtc_api_order_book_data_source import HitbtcAPIOrderBookDataSource
-from hummingbot.connector.exchange.hitbtc.hitbtc_auth import HitbtcAuth
-from hummingbot.connector.exchange.hitbtc.hitbtc_constants import Constants
-from hummingbot.connector.exchange.hitbtc.hitbtc_in_flight_order import HitbtcInFlightOrder
-from hummingbot.connector.exchange.hitbtc.hitbtc_order_book_tracker import HitbtcOrderBookTracker
-from hummingbot.connector.exchange.hitbtc.hitbtc_user_stream_tracker import HitbtcUserStreamTracker
-from hummingbot.connector.exchange.hitbtc.hitbtc_utils import (
-    HitbtcAPIError,
+from hummingbot.connector.exchange.changelly.changelly_api_order_book_data_source import ChangellyAPIOrderBookDataSource
+from hummingbot.connector.exchange.changelly.changelly_auth import ChangellyAuth
+from hummingbot.connector.exchange.changelly.changelly_constants import Constants
+from hummingbot.connector.exchange.changelly.changelly_in_flight_order import ChangellyInFlightOrder
+from hummingbot.connector.exchange.changelly.changelly_order_book_tracker import ChangellyOrderBookTracker
+from hummingbot.connector.exchange.changelly.changelly_user_stream_tracker import ChangellyUserStreamTracker
+from hummingbot.connector.exchange.changelly.changelly_utils import (
+    ChangellyAPIError,
     aiohttp_response_with_errors,
     get_new_client_order_id,
     retry_sleep_time,
@@ -51,9 +51,9 @@ ctce_logger = None
 s_decimal_NaN = Decimal("nan")
 
 
-class HitbtcExchange(ExchangeBase):
+class ChangellyExchange(ExchangeBase):
     """
-    HitbtcExchange connects with HitBTC exchange and provides order book pricing, user account tracking and
+    ChangellyExchange connects with HitBTC exchange and provides order book pricing, user account tracking and
     trading functionality.
     """
     ORDER_NOT_EXIST_CONFIRMATION_COUNT = 3
@@ -68,28 +68,28 @@ class HitbtcExchange(ExchangeBase):
 
     def __init__(self,
                  client_config_map: "ClientConfigAdapter",
-                 hitbtc_api_key: str,
-                 hitbtc_secret_key: str,
+                 changelly_api_key: str,
+                 changelly_secret_key: str,
                  trading_pairs: Optional[List[str]] = None,
                  trading_required: bool = True
                  ):
         """
-        :param hitbtc_api_key: The API key to connect to private HitBTC APIs.
-        :param hitbtc_secret_key: The API secret.
+        :param changelly_api_key: The API key to connect to private HitBTC APIs.
+        :param changelly_secret_key: The API secret.
         :param trading_pairs: The market trading pairs which to track order book data.
         :param trading_required: Whether actual trading is needed.
         """
         super().__init__(client_config_map)
         self._trading_required = trading_required
         self._trading_pairs = trading_pairs
-        self._hitbtc_auth = HitbtcAuth(hitbtc_api_key, hitbtc_secret_key)
-        self._set_order_book_tracker(HitbtcOrderBookTracker(trading_pairs=trading_pairs))
-        self._user_stream_tracker = HitbtcUserStreamTracker(self._hitbtc_auth, trading_pairs)
+        self._changelly_auth = ChangellyAuth(changelly_api_key, changelly_secret_key)
+        self._set_order_book_tracker(ChangellyOrderBookTracker(trading_pairs=trading_pairs))
+        self._user_stream_tracker = ChangellyUserStreamTracker(self._changelly_auth, trading_pairs)
         self._ev_loop = asyncio.get_event_loop()
         self._shared_client = None
         self._poll_notifier = asyncio.Event()
         self._last_timestamp = 0
-        self._in_flight_orders = {}  # Dict[client_order_id:str, HitbtcInFlightOrder]
+        self._in_flight_orders = {}  # Dict[client_order_id:str, ChangellyInFlightOrder]
         self._order_not_found_records = {}  # Dict[client_order_id:str, count:int]
         self._trading_rules = {}  # Dict[trading_pair:str, TradingRule]
         self._status_polling_task = None
@@ -99,7 +99,7 @@ class HitbtcExchange(ExchangeBase):
 
     @property
     def name(self) -> str:
-        return "hitbtc"
+        return "changelly"
 
     @property
     def order_books(self) -> Dict[str, OrderBook]:
@@ -110,7 +110,7 @@ class HitbtcExchange(ExchangeBase):
         return self._trading_rules
 
     @property
-    def in_flight_orders(self) -> Dict[str, HitbtcInFlightOrder]:
+    def in_flight_orders(self) -> Dict[str, ChangellyInFlightOrder]:
         return self._in_flight_orders
 
     @property
@@ -159,7 +159,7 @@ class HitbtcExchange(ExchangeBase):
         :param saved_states: The saved tracking_states.
         """
         self._in_flight_orders.update({
-            key: HitbtcInFlightOrder.from_json(value)
+            key: ChangellyInFlightOrder.from_json(value)
             for key, value in saved_states.items()
         })
 
@@ -286,7 +286,7 @@ class HitbtcExchange(ExchangeBase):
         result = {}
         for rule in symbols_info:
             try:
-                trading_pair = await HitbtcAPIOrderBookDataSource.trading_pair_associated_to_exchange_symbol(rule["id"])
+                trading_pair = await ChangellyAPIOrderBookDataSource.trading_pair_associated_to_exchange_symbol(rule["id"])
                 price_step = Decimal(str(rule["tickSize"]))
                 size_step = Decimal(str(rule["quantityIncrement"]))
                 result[trading_pair] = TradingRule(trading_pair,
@@ -320,8 +320,7 @@ class HitbtcExchange(ExchangeBase):
         # Generate auth headers if needed.
         headers: dict = {"Content-Type": "application/x-www-form-urlencoded"}
         if is_auth_required:
-            headers: dict = self._hitbtc_auth.get_headers(method, f"{Constants.REST_URL_AUTH}/{endpoint}",
-                                                          params)
+            headers: dict = self._changelly_auth.get_headers(method, f"{Constants.REST_URL_AUTH}/{endpoint}", params)
         # Build request coro
         response_coro = shared_client.request(method=method.upper(), url=url, headers=headers,
                                               params=qs_params, data=req_form,
@@ -337,9 +336,9 @@ class HitbtcExchange(ExchangeBase):
                 return await self._api_request(method=method, endpoint=endpoint, params=params,
                                                is_auth_required=is_auth_required, try_count=try_count)
             else:
-                raise HitbtcAPIError({"error": parsed_response, "status": http_status})
+                raise ChangellyAPIError({"error": parsed_response, "status": http_status})
         if "error" in parsed_response:
-            raise HitbtcAPIError(parsed_response)
+            raise ChangellyAPIError(parsed_response)
         return parsed_response
 
     def get_order_price_quantum(self, trading_pair: str, price: Decimal):
@@ -427,7 +426,7 @@ class HitbtcExchange(ExchangeBase):
             raise ValueError(f"Buy order amount {amount} is lower than the minimum order size "
                              f"{trading_rule.min_order_size}.")
         order_type_str = order_type.name.lower().split("_")[0]
-        symbol = await HitbtcAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
+        symbol = await ChangellyAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
         api_params = {"symbol": symbol,
                       "side": trade_type.name.lower(),
                       "type": order_type_str,
@@ -465,7 +464,7 @@ class HitbtcExchange(ExchangeBase):
                                    tracked_order.creation_timestamp))
         except asyncio.CancelledError:
             raise
-        except HitbtcAPIError as e:
+        except ChangellyAPIError as e:
             error_reason = e.error_payload.get('error', {}).get('message')
             self.stop_tracking_order(order_id)
             self.logger().network(
@@ -488,7 +487,7 @@ class HitbtcExchange(ExchangeBase):
         """
         Starts tracking an order by simply adding it into _in_flight_orders dictionary.
         """
-        self._in_flight_orders[order_id] = HitbtcInFlightOrder(
+        self._in_flight_orders[order_id] = ChangellyInFlightOrder(
             client_order_id=order_id,
             exchange_order_id=exchange_order_id,
             trading_pair=trading_pair,
@@ -530,7 +529,7 @@ class HitbtcExchange(ExchangeBase):
             order_was_cancelled = True
         except asyncio.CancelledError:
             raise
-        except HitbtcAPIError as e:
+        except ChangellyAPIError as e:
             err = e.error_payload.get('error', e.error_payload)
             self._order_not_found_records[order_id] = self._order_not_found_records.get(order_id, 0) + 1
             if err.get('code') == 20002 and \
@@ -603,7 +602,7 @@ class HitbtcExchange(ExchangeBase):
             responses = await safe_gather(*tasks, return_exceptions=True)
             for response, tracked_order in zip(responses, tracked_orders):
                 client_order_id = tracked_order.client_order_id
-                if isinstance(response, HitbtcAPIError):
+                if isinstance(response, ChangellyAPIError):
                     err = response.error_payload.get('error', response.error_payload)
                     if err.get('code') == 20002:
                         self._order_not_found_records[client_order_id] = \
@@ -830,7 +829,7 @@ class HitbtcExchange(ExchangeBase):
     async def _user_stream_event_listener(self):
         """
         Listens to message in _user_stream_tracker.user_stream queue. The messages are put in by
-        HitbtcAPIUserStreamDataSource.
+        ChangellyAPIUserStreamDataSource.
         """
         async for event_message in self._iter_user_event_queue():
             try:
@@ -868,7 +867,7 @@ class HitbtcExchange(ExchangeBase):
             if order["type"] != OrderType.LIMIT.name.lower():
                 self.logger().info(f"Unsupported order type found: {order['type']}")
                 continue
-            trading_pair = await HitbtcAPIOrderBookDataSource.trading_pair_associated_to_exchange_symbol(
+            trading_pair = await ChangellyAPIOrderBookDataSource.trading_pair_associated_to_exchange_symbol(
                 order["symbol"])
             ret_val.append(
                 OpenOrder(
@@ -888,8 +887,8 @@ class HitbtcExchange(ExchangeBase):
 
     async def all_trading_pairs(self) -> List[str]:
         # This method should be removed and instead we should implement _initialize_trading_pair_symbol_map
-        return await HitbtcAPIOrderBookDataSource.fetch_trading_pairs()
+        return await ChangellyAPIOrderBookDataSource.fetch_trading_pairs()
 
     async def get_last_traded_prices(self, trading_pairs: List[str]) -> Dict[str, float]:
         # This method should be removed and instead we should implement _get_last_traded_price
-        return await HitbtcAPIOrderBookDataSource.get_last_traded_prices(trading_pairs=trading_pairs)
+        return await ChangellyAPIOrderBookDataSource.get_last_traded_prices(trading_pairs=trading_pairs)

@@ -5,7 +5,7 @@ from base64 import b64encode
 from typing import Any, Dict
 
 
-class HitbtcAuth():
+class ChangellyAuth():
     """
     Auth class required by HitBTC API
     Learn more at https://exchange-docs.crypto.com/#digital-signature

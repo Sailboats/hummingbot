@@ -3,10 +3,10 @@ from typing import Dict, List, Optional
 from hummingbot.core.data_type.order_book_message import OrderBookMessage, OrderBookMessageType
 from hummingbot.core.data_type.order_book_row import OrderBookRow
 
-from .hitbtc_constants import Constants
+from .changelly_constants import Constants
 
 
-class HitbtcOrderBookMessage(OrderBookMessage):
+class ChangellyOrderBookMessage(OrderBookMessage):
     def __new__(
         cls,
         message_type: OrderBookMessageType,
@@ -20,7 +20,7 @@ class HitbtcOrderBookMessage(OrderBookMessage):
                 raise ValueError("timestamp must not be None when initializing snapshot messages.")
             timestamp = content["timestamp"]
 
-        return super(HitbtcOrderBookMessage, cls).__new__(
+        return super(ChangellyOrderBookMessage, cls).__new__(
             cls, message_type, content, timestamp=timestamp, *args, **kwargs
         )
 

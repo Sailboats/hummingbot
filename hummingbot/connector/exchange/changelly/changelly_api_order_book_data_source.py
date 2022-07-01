@@ -12,14 +12,14 @@ from hummingbot.core.data_type.order_book_message import OrderBookMessage
 from hummingbot.core.data_type.order_book_tracker_data_source import OrderBookTrackerDataSource
 from hummingbot.logger import HummingbotLogger
 
-from .hitbtc_active_order_tracker import HitbtcActiveOrderTracker
-from .hitbtc_constants import Constants
-from .hitbtc_order_book import HitbtcOrderBook
-from .hitbtc_utils import HitbtcAPIError, api_call_with_retries, str_date_to_ts, translate_asset
-from .hitbtc_websocket import HitbtcWebsocket
+from .changelly_active_order_tracker import ChangellyActiveOrderTracker
+from .changelly_constants import Constants
+from .changelly_order_book import ChangellyOrderBook
+from .changelly_utils import ChangellyAPIError, api_call_with_retries, str_date_to_ts, translate_asset
+from .changelly_websocket import ChangellyWebsocket
 
 
-class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
+class ChangellyAPIOrderBookDataSource(OrderBookTrackerDataSource):
     _logger: Optional[HummingbotLogger] = None
     _trading_pair_symbol_map: Dict[str, str] = {}
 
@@ -62,7 +62,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
         if len(trading_pairs) > 1:
             tickers: List[Dict[Any]] = await api_call_with_retries("GET", Constants.ENDPOINT["TICKER"])
         for trading_pair in trading_pairs:
-            ex_pair: str = await HitbtcAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
+            ex_pair: str = await ChangellyAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
             if len(trading_pairs) > 1:
                 ticker: Dict[Any] = list([tic for tic in tickers if tic['symbol'] == ex_pair])[0]
             else:
@@ -73,7 +73,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
 
     @staticmethod
     async def exchange_symbol_associated_to_pair(trading_pair: str) -> str:
-        symbol_map = await HitbtcAPIOrderBookDataSource.trading_pair_symbol_map()
+        symbol_map = await ChangellyAPIOrderBookDataSource.trading_pair_symbol_map()
         symbols = [symbol for symbol, pair in symbol_map.items() if pair == trading_pair]
 
         if symbols:
@@ -85,12 +85,12 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
 
     @staticmethod
     async def trading_pair_associated_to_exchange_symbol(symbol: str) -> str:
-        symbol_map = await HitbtcAPIOrderBookDataSource.trading_pair_symbol_map()
+        symbol_map = await ChangellyAPIOrderBookDataSource.trading_pair_symbol_map()
         return symbol_map[symbol]
 
     @staticmethod
     async def fetch_trading_pairs() -> List[str]:
-        symbols_map = await HitbtcAPIOrderBookDataSource.trading_pair_symbol_map()
+        symbols_map = await ChangellyAPIOrderBookDataSource.trading_pair_symbol_map()
         return list(symbols_map.values())
 
     @staticmethod
@@ -99,11 +99,11 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
         Get whole orderbook
         """
         try:
-            ex_pair = await HitbtcAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
+            ex_pair = await ChangellyAPIOrderBookDataSource.exchange_symbol_associated_to_pair(trading_pair)
             orderbook_response: Dict[Any] = await api_call_with_retries("GET", Constants.ENDPOINT["ORDER_BOOK"],
                                                                         params={"limit": 150, "symbols": ex_pair})
             return orderbook_response[ex_pair]
-        except HitbtcAPIError as e:
+        except ChangellyAPIError as e:
             err = e.error_payload.get('error', e.error_payload)
             raise IOError(
                 f"Error fetching OrderBook for {trading_pair} at {Constants.EXCHANGE_NAME}. "
@@ -112,12 +112,12 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
     async def get_new_order_book(self, trading_pair: str) -> OrderBook:
         snapshot: Dict[str, Any] = await self.get_order_book_data(trading_pair)
         snapshot_timestamp: float = time.time()
-        snapshot_msg: OrderBookMessage = HitbtcOrderBook.snapshot_message_from_exchange(
+        snapshot_msg: OrderBookMessage = ChangellyOrderBook.snapshot_message_from_exchange(
             snapshot,
             snapshot_timestamp,
             metadata={"trading_pair": trading_pair})
         order_book = self.order_book_create_function()
-        active_order_tracker: HitbtcActiveOrderTracker = HitbtcActiveOrderTracker()
+        active_order_tracker: ChangellyActiveOrderTracker = ChangellyActiveOrderTracker()
         bids, asks = active_order_tracker.convert_snapshot_message_to_order_book_row(snapshot_msg)
         order_book.apply_snapshot(bids, asks, snapshot_msg.update_id)
         return order_book
@@ -128,11 +128,11 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
         """
         while True:
             try:
-                ws = HitbtcWebsocket()
+                ws = ChangellyWebsocket()
                 await ws.connect()
 
                 for pair in self._trading_pairs:
-                    symbol = await HitbtcAPIOrderBookDataSource.exchange_symbol_associated_to_pair(pair)
+                    symbol = await ChangellyAPIOrderBookDataSource.exchange_symbol_associated_to_pair(pair)
                     await ws.subscribe(Constants.WS_SUB["TRADES"], symbol)
 
                 async for response in ws.on_message():
@@ -147,7 +147,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
                     for trade in trades_data["data"]:
                         trade: Dict[Any] = trade
                         trade_timestamp: int = str_date_to_ts(trade["timestamp"])
-                        trade_msg: OrderBookMessage = HitbtcOrderBook.trade_message_from_exchange(
+                        trade_msg: OrderBookMessage = ChangellyOrderBook.trade_message_from_exchange(
                             trade,
                             trade_timestamp,
                             metadata={"trading_pair": pair})
@@ -167,7 +167,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
         """
         while True:
             try:
-                ws = HitbtcWebsocket()
+                ws = ChangellyWebsocket()
                 await ws.connect()
 
                 order_book_methods = [
@@ -176,7 +176,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
                 ]
 
                 for pair in self._trading_pairs:
-                    symbol = await HitbtcAPIOrderBookDataSource.exchange_symbol_associated_to_pair(pair)
+                    symbol = await ChangellyAPIOrderBookDataSource.exchange_symbol_associated_to_pair(pair)
                     await ws.subscribe(Constants.WS_SUB["ORDERS"], symbol)
 
                 async for response in ws.on_message():
@@ -189,9 +189,9 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
                     timestamp: int = str_date_to_ts(order_book_data["timestamp"])
                     pair: str = await self.trading_pair_associated_to_exchange_symbol(order_book_data["symbol"])
 
-                    order_book_msg_cls = (HitbtcOrderBook.diff_message_from_exchange
+                    order_book_msg_cls = (ChangellyOrderBook.diff_message_from_exchange
                                           if method == Constants.WS_METHODS['ORDERS_UPDATE'] else
-                                          HitbtcOrderBook.snapshot_message_from_exchange)
+                                          ChangellyOrderBook.snapshot_message_from_exchange)
 
                     orderbook_msg: OrderBookMessage = order_book_msg_cls(
                         order_book_data,
@@ -220,7 +220,7 @@ class HitbtcAPIOrderBookDataSource(OrderBookTrackerDataSource):
                     try:
                         snapshot: Dict[str, any] = await self.get_order_book_data(trading_pair)
                         snapshot_timestamp: int = str_date_to_ts(snapshot["timestamp"])
-                        snapshot_msg: OrderBookMessage = HitbtcOrderBook.snapshot_message_from_exchange(
+                        snapshot_msg: OrderBookMessage = ChangellyOrderBook.snapshot_message_from_exchange(
                             snapshot,
                             snapshot_timestamp,
                             metadata={"trading_pair": trading_pair}

@@ -10,7 +10,7 @@ from pydantic import Field, SecretStr
 from hummingbot.client.config.config_data_types import BaseConnectorConfigMap, ClientFieldData
 from hummingbot.core.utils.tracking_nonce import get_tracking_nonce
 
-from .hitbtc_constants import Constants
+from .changelly_constants import Constants
 
 TRADING_PAIR_SPLITTER = re.compile(Constants.TRADING_PAIR_SPLITTER)
 
@@ -21,7 +21,7 @@ EXAMPLE_PAIR = "BTC-USD"
 DEFAULT_FEES = [0.1, 0.25]
 
 
-class HitbtcAPIError(IOError):
+class ChangellyAPIError(IOError):
     def __init__(self, error_payload: Dict[str, Any]):
         super().__init__(str(error_payload))
         self.error_payload = error_payload
@@ -133,13 +133,13 @@ async def api_call_with_retries(method,
             return await api_call_with_retries(method=method, endpoint=endpoint, params=params,
                                                shared_client=shared_client, try_count=try_count)
         else:
-            raise HitbtcAPIError({"error": parsed_response, "status": http_status})
+            raise ChangellyAPIError({"error": parsed_response, "status": http_status})
     return parsed_response
 
 
-class HitbtcConfigMap(BaseConnectorConfigMap):
-    connector: str = Field(default="hitbtc", client_data=None)
-    hitbtc_api_key: SecretStr = Field(
+class ChangellyConfigMap(BaseConnectorConfigMap):
+    connector: str = Field(default="changelly", client_data=None)
+    changelly_api_key: SecretStr = Field(
         default=...,
         client_data=ClientFieldData(
             prompt=lambda cm: f"Enter your {Constants.EXCHANGE_NAME} API key",
@@ -148,7 +148,7 @@ class HitbtcConfigMap(BaseConnectorConfigMap):
             prompt_on_new=True,
         )
     )
-    hitbtc_secret_key: SecretStr = Field(
+    changelly_secret_key: SecretStr = Field(
         default=...,
         client_data=ClientFieldData(
             prompt=lambda cm: f"Enter your {Constants.EXCHANGE_NAME} secret key",
@@ -159,7 +159,7 @@ class HitbtcConfigMap(BaseConnectorConfigMap):
     )
 
     class Config:
-        title = "hitbtc"
+        title = "changelly"
 
 
-KEYS = HitbtcConfigMap.construct()
+KEYS = ChangellyConfigMap.construct()

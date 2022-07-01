@@ -1,16 +1,18 @@
 import logging
 from typing import List, Optional
 
-from hummingbot.connector.exchange.hitbtc.hitbtc_api_user_stream_data_source import HitbtcAPIUserStreamDataSource
-from hummingbot.connector.exchange.hitbtc.hitbtc_auth import HitbtcAuth
-from hummingbot.connector.exchange.hitbtc.hitbtc_constants import Constants
+from hummingbot.connector.exchange.changelly.changelly_api_user_stream_data_source import (
+    ChangellyAPIUserStreamDataSource,
+)
+from hummingbot.connector.exchange.changelly.changelly_auth import ChangellyAuth
+from hummingbot.connector.exchange.changelly.changelly_constants import Constants
 from hummingbot.core.data_type.user_stream_tracker import UserStreamTracker
 from hummingbot.core.data_type.user_stream_tracker_data_source import UserStreamTrackerDataSource
 from hummingbot.core.utils.async_utils import safe_ensure_future, safe_gather
 from hummingbot.logger import HummingbotLogger
 
 
-class HitbtcUserStreamTracker(UserStreamTracker):
+class ChangellyUserStreamTracker(UserStreamTracker):
     _cbpust_logger: Optional[HummingbotLogger] = None
 
     @classmethod
@@ -20,12 +22,12 @@ class HitbtcUserStreamTracker(UserStreamTracker):
         return cls._bust_logger
 
     def __init__(self,
-                 hitbtc_auth: Optional[HitbtcAuth] = None,
+                 changelly_auth: Optional[ChangellyAuth] = None,
                  trading_pairs: Optional[List[str]] = None):
-        self._hitbtc_auth: HitbtcAuth = hitbtc_auth
+        self._changelly_auth: ChangellyAuth = changelly_auth
         self._trading_pairs: List[str] = trading_pairs or []
-        super().__init__(data_source=HitbtcAPIUserStreamDataSource(
-            hitbtc_auth=self._hitbtc_auth,
+        super().__init__(data_source=ChangellyAPIUserStreamDataSource(
+            changelly_auth=self._changelly_auth,
             trading_pairs=self._trading_pairs
         ))
 
@@ -37,8 +39,8 @@ class HitbtcUserStreamTracker(UserStreamTracker):
         :return: OrderBookTrackerDataSource
         """
         if not self._data_source:
-            self._data_source = HitbtcAPIUserStreamDataSource(
-                hitbtc_auth=self._hitbtc_auth,
+            self._data_source = ChangellyAPIUserStreamDataSource(
+                changelly_auth=self._changelly_auth,
                 trading_pairs=self._trading_pairs
             )
         return self._data_source

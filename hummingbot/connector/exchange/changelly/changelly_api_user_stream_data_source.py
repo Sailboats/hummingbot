@@ -7,13 +7,13 @@ from typing import Any, AsyncIterable, List, Optional
 from hummingbot.core.data_type.user_stream_tracker_data_source import UserStreamTrackerDataSource
 from hummingbot.logger import HummingbotLogger
 
-from .hitbtc_auth import HitbtcAuth
-from .hitbtc_constants import Constants
-from .hitbtc_utils import HitbtcAPIError
-from .hitbtc_websocket import HitbtcWebsocket
+from .changelly_auth import ChangellyAuth
+from .changelly_constants import Constants
+from .changelly_utils import ChangellyAPIError
+from .changelly_websocket import ChangellyWebsocket
 
 
-class HitbtcAPIUserStreamDataSource(UserStreamTrackerDataSource):
+class ChangellyAPIUserStreamDataSource(UserStreamTrackerDataSource):
 
     _logger: Optional[HummingbotLogger] = None
 
@@ -23,9 +23,9 @@ class HitbtcAPIUserStreamDataSource(UserStreamTrackerDataSource):
             cls._logger = logging.getLogger(__name__)
         return cls._logger
 
-    def __init__(self, hitbtc_auth: HitbtcAuth, trading_pairs: Optional[List[str]] = []):
-        self._hitbtc_auth: HitbtcAuth = hitbtc_auth
-        self._ws: HitbtcWebsocket = None
+    def __init__(self, changelly_auth: ChangellyAuth, trading_pairs: Optional[List[str]] = []):
+        self._changelly_auth: ChangellyAuth = changelly_auth
+        self._ws: ChangellyWebsocket = None
         self._trading_pairs = trading_pairs
         self._current_listen_key = None
         self._listen_for_user_stream_task = None
@@ -45,7 +45,7 @@ class HitbtcAPIUserStreamDataSource(UserStreamTrackerDataSource):
         """
 
         try:
-            self._ws = HitbtcWebsocket(self._hitbtc_auth)
+            self._ws = ChangellyWebsocket(self._changelly_auth)
 
             await self._ws.connect()
 
@@ -83,7 +83,7 @@ class HitbtcAPIUserStreamDataSource(UserStreamTrackerDataSource):
                     output.put_nowait(msg)
             except asyncio.CancelledError:
                 raise
-            except HitbtcAPIError as e:
+            except ChangellyAPIError as e:
                 self.logger().error(e.error_payload.get('error'), exc_info=True)
                 raise
             except Exception:

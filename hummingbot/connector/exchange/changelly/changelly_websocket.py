@@ -8,16 +8,16 @@ from typing import Any, AsyncIterable, Dict, Optional
 import websockets
 from websockets.exceptions import ConnectionClosed
 
-from hummingbot.connector.exchange.hitbtc.hitbtc_auth import HitbtcAuth
-from hummingbot.connector.exchange.hitbtc.hitbtc_constants import Constants
-from hummingbot.connector.exchange.hitbtc.hitbtc_utils import HitbtcAPIError, RequestId
+from hummingbot.connector.exchange.changelly.changelly_auth import ChangellyAuth
+from hummingbot.connector.exchange.changelly.changelly_constants import Constants
+from hummingbot.connector.exchange.changelly.changelly_utils import ChangellyAPIError, RequestId
 from hummingbot.logger import HummingbotLogger
 
 # reusable websocket class
 # ToDo: We should eventually remove this class, and instantiate web socket connection normally (see Binance for example)
 
 
-class HitbtcWebsocket(RequestId):
+class ChangellyWebsocket(RequestId):
     _logger: Optional[HummingbotLogger] = None
 
     @classmethod
@@ -27,8 +27,8 @@ class HitbtcWebsocket(RequestId):
         return cls._logger
 
     def __init__(self,
-                 auth: Optional[HitbtcAuth] = None):
-        self._auth: Optional[HitbtcAuth] = auth
+                 auth: Optional[ChangellyAuth] = None):
+        self._auth: Optional[ChangellyAuth] = auth
         self._isPrivate = True if self._auth is not None else False
         self._WS_URL = Constants.WS_PRIVATE_URL if self._isPrivate else Constants.WS_PUBLIC_URL
         self._client: Optional[websockets.WebSocketClientProtocol] = None
@@ -46,7 +46,7 @@ class HitbtcWebsocket(RequestId):
             json_msg = json.loads(raw_msg_str)
             if json_msg.get("result") is not True:
                 err_msg = json_msg.get('error', {}).get('message')
-                raise HitbtcAPIError({"error": f"Failed to authenticate to websocket - {err_msg}."})
+                raise ChangellyAPIError({"error": f"Failed to authenticate to websocket - {err_msg}."})
 
         return self._client
 

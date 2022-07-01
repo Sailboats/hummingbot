@@ -1,8 +1,8 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from hummingbot.connector.exchange.hitbtc.hitbtc_constants import Constants
-from hummingbot.connector.exchange.hitbtc.hitbtc_order_book_message import HitbtcOrderBookMessage
+from hummingbot.connector.exchange.changelly.changelly_constants import Constants
+from hummingbot.connector.exchange.changelly.changelly_order_book_message import ChangellyOrderBookMessage
 from hummingbot.core.data_type.order_book import OrderBook
 from hummingbot.core.data_type.order_book_message import OrderBookMessage, OrderBookMessageType
 from hummingbot.logger import HummingbotLogger
@@ -10,7 +10,7 @@ from hummingbot.logger import HummingbotLogger
 _logger = None
 
 
-class HitbtcOrderBook(OrderBook):
+class ChangellyOrderBook(OrderBook):
     @classmethod
     def logger(cls) -> HummingbotLogger:
         global _logger
@@ -27,13 +27,13 @@ class HitbtcOrderBook(OrderBook):
         Convert json snapshot data into standard OrderBookMessage format
         :param msg: json snapshot data from live web socket stream
         :param timestamp: timestamp attached to incoming data
-        :return: HitbtcOrderBookMessage
+        :return: ChangellyOrderBookMessage
         """
 
         if metadata:
             msg.update(metadata)
 
-        return HitbtcOrderBookMessage(
+        return ChangellyOrderBookMessage(
             message_type=OrderBookMessageType.SNAPSHOT,
             content=msg,
             timestamp=timestamp
@@ -48,13 +48,13 @@ class HitbtcOrderBook(OrderBook):
         Convert json diff data into standard OrderBookMessage format
         :param msg: json diff data from live web socket stream
         :param timestamp: timestamp attached to incoming data
-        :return: HitbtcOrderBookMessage
+        :return: ChangellyOrderBookMessage
         """
 
         if metadata:
             msg.update(metadata)
 
-        return HitbtcOrderBookMessage(
+        return ChangellyOrderBookMessage(
             message_type=OrderBookMessageType.DIFF,
             content=msg,
             timestamp=timestamp
@@ -68,7 +68,7 @@ class HitbtcOrderBook(OrderBook):
         """
         Convert a trade data into standard OrderBookMessage format
         :param record: a trade data from the database
-        :return: HitbtcOrderBookMessage
+        :return: ChangellyOrderBookMessage
         """
 
         if metadata:
@@ -81,7 +81,7 @@ class HitbtcOrderBook(OrderBook):
             "amount": msg.get("quantity"),
         })
 
-        return HitbtcOrderBookMessage(
+        return ChangellyOrderBookMessage(
             message_type=OrderBookMessageType.TRADE,
             content=msg,
             timestamp=timestamp
