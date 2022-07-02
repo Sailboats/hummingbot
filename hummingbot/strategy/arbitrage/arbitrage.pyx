@@ -583,7 +583,7 @@ cdef class ArbitrageStrategy(StrategyBase):
             net_sell_proceeds = total_bid_value_adjusted * (1 - sell_fee.percent) - total_sell_flat_fees
             net_buy_costs = total_ask_value_adjusted * (1 + buy_fee.percent) + total_buy_flat_fees
             profitability = net_sell_proceeds / net_buy_costs
-            f.log_with_clock(
+            self.log_with_clock(
                 logging.INFO,
                 f"total_bid_value_adjusted = {total_bid_value_adjusted},total_ask_value_adjusted = {total_ask_value_adjusted},net_sell_proceeds = {net_sell_proceeds},net_buy_costs = {net_buy_costs},profitability = {profitability}"
             )
