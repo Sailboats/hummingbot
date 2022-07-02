@@ -8,11 +8,11 @@ template_version: 8
 # Exchange trading fees, the values are in percentage value, e.g. 0.1 for 0.1%.
 # If the value is left blank, the default value (from corresponding market connector) will be used.
 
-binance_maker_fee: 0.075
-binance_taker_fee: 0.075
+binance_maker_fee: 0
+binance_taker_fee: 0
 
-changelly_maker_fee: 0.03
-changelly_taker_fee: 0.04
+changelly_maker_fee: 0
+changelly_taker_fee: 0
 
 beaxy_maker_fee:
 beaxy_taker_fee:
@@ -51,8 +51,8 @@ dolomite_maker_fee_amount:
 dolomite_taker_fee_amount:
 
 
-hitbtc_maker_fee:
-hitbtc_taker_fee:
+hitbtc_maker_fee: 0
+hitbtc_taker_fee: 0
 
 gate_io_maker_fee:
 gate_io_taker_fee:
