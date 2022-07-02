@@ -439,10 +439,10 @@ cdef class ArbitrageStrategy(StrategyBase):
         quantized_sell_amount = sell_market.c_quantize_order_amount(sell_market_trading_pair_tuple.trading_pair, Decimal(best_amount))
         quantized_order_amount = min(quantized_buy_amount, quantized_sell_amount)
 
-        self.log_with_clock(
-                logging.INFO,
-                f"c_process_market_pair_inner: best_amount = {best_amount},best_profitability = {best_profitability},sell_price = {sell_price},buy_price = {buy_price},quantized_buy_amount = {quantized_buy_amount},quantized_sell_amount = {quantized_sell_amount},quantized_order_amount = {quantized_order_amount}"
-        )
+#        self.log_with_clock(
+#                logging.INFO,
+#                f"c_process_market_pair_inner: best_amount = {best_amount},best_profitability = {best_profitability},sell_price = {sell_price},buy_price = {buy_price},quantized_buy_amount = {quantized_buy_amount},quantized_sell_amount = {quantized_sell_amount},quantized_order_amount = {quantized_order_amount}"
+#        )
 
         if quantized_order_amount:
             if self._logging_options & self.OPTION_LOG_CREATE_ORDER:
@@ -539,7 +539,10 @@ cdef class ArbitrageStrategy(StrategyBase):
                                                                sell_market_trading_pair_tuple,
                                                                buy_market_conversion_rate,
                                                                sell_market_conversion_rate)
-
+        self.log_with_clock(
+                logging.INFO,
+                f"buy_market_conversion_rate = {buy_market_conversion_rate},sell_market_conversion_rate = {sell_market_conversion_rate},profitable_orders = {profitable_orders}"
+        )
         # check if each step meets the profit level after fees, and is within the wallet balance
         # fee must be calculated at every step because fee might change a potentially profitable order to unprofitable
         # market.c_get_fee returns a namedtuple with 2 keys "percent" and "flat_fees"
@@ -563,17 +566,27 @@ cdef class ArbitrageStrategy(StrategyBase):
                 total_previous_step_base_amount + amount,
                 bid_price
             )
+            self.log_with_clock(
+                logging.INFO,
+                f"buy_fee = {buy_fee},sell_fee = {sell_fee}"
+            )
             # accumulated flat fees of exchange
             total_buy_flat_fees = self.c_sum_flat_fees(buy_market_trading_pair_tuple.quote_asset, buy_fee.flat_fees)
             total_sell_flat_fees = self.c_sum_flat_fees(sell_market_trading_pair_tuple.quote_asset, sell_fee.flat_fees)
-
+sel         f.log_with_clock(
+                logging.INFO,
+                f"total_buy_flat_fees = {total_buy_flat_fees},total_sell_flat_fees = {total_sell_flat_fees}"
+            )
             # accumulated profitability with fees
             total_bid_value_adjusted += bid_price_adjusted * amount
             total_ask_value_adjusted += ask_price_adjusted * amount
             net_sell_proceeds = total_bid_value_adjusted * (1 - sell_fee.percent) - total_sell_flat_fees
             net_buy_costs = total_ask_value_adjusted * (1 + buy_fee.percent) + total_buy_flat_fees
             profitability = net_sell_proceeds / net_buy_costs
-
+            f.log_with_clock(
+                logging.INFO,
+                f"total_bid_value_adjusted = {total_bid_value_adjusted},total_ask_value_adjusted = {total_ask_value_adjusted},net_sell_proceeds = {net_sell_proceeds},net_buy_costs = {net_buy_costs},profitability = {profitability}"
+            )
             # if current step is within minimum profitability, set to best profitable order
             # because the total amount is greater than the previous step
             if profitability > (1 + self._min_profitability):
