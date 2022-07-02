@@ -387,6 +387,10 @@ cdef class ArbitrageStrategy(StrategyBase):
 
         :param market_pair: arbitrage market pair
         """
+        self.log_with_clock(
+                logging.INFO,
+                f"calling c_process_market_pair"
+        )
         if not self.c_ready_for_new_orders([market_pair.first, market_pair.second]):
             return
 
@@ -395,6 +399,10 @@ cdef class ArbitrageStrategy(StrategyBase):
 
         if (self._current_profitability[1] < self._min_profitability and
                 self._current_profitability[0] < self._min_profitability):
+            self.log_with_clock(
+                logging.INFO,
+                f"self._current_profitability = {self._current_profitability},both less then self._min_profitability = {self._min_profitability},thus can not create orders"
+            )
             return
 
         if self._current_profitability[1] > self._current_profitability[0]:
