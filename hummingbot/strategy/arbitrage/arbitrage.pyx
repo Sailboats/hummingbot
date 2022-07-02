@@ -573,7 +573,7 @@ cdef class ArbitrageStrategy(StrategyBase):
             # accumulated flat fees of exchange
             total_buy_flat_fees = self.c_sum_flat_fees(buy_market_trading_pair_tuple.quote_asset, buy_fee.flat_fees)
             total_sell_flat_fees = self.c_sum_flat_fees(sell_market_trading_pair_tuple.quote_asset, sell_fee.flat_fees)
-            f.log_with_clock(
+            self.log_with_clock(
                 logging.INFO,
                 f"total_buy_flat_fees = {total_buy_flat_fees},total_sell_flat_fees = {total_sell_flat_fees}"
             )
