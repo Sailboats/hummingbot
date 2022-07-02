@@ -387,27 +387,27 @@ cdef class ArbitrageStrategy(StrategyBase):
 
         :param market_pair: arbitrage market pair
         """
-        self.log_with_clock(
-                logging.INFO,
-                f"calling c_process_market_pair"
-        )
+#        self.log_with_clock(
+#                logging.INFO,
+#                f"calling c_process_market_pair"
+#        )
         if not self.c_ready_for_new_orders([market_pair.first, market_pair.second]):
             return
 
         self._current_profitability = \
             self.c_calculate_arbitrage_top_order_profitability(market_pair)
 
-        self.log_with_clock(
-            logging.INFO,
-            f"self._current_profitability = {self._current_profitability},self._min_profitability = {self._min_profitability}"
-        )
-        
+#        self.log_with_clock(
+#            logging.INFO,
+#            f"self._current_profitability = {self._current_profitability},self._min_profitability = {self._min_profitability}"
+#        )
+
         if (self._current_profitability[1] < self._min_profitability and
                 self._current_profitability[0] < self._min_profitability):
-            self.log_with_clock(
-                logging.INFO,
-                f"self._current_profitability = {self._current_profitability},both less then self._min_profitability = {self._min_profitability},thus can not create orders"
-            )
+#            self.log_with_clock(
+#                logging.INFO,
+#                f"self._current_profitability = {self._current_profitability},both less then self._min_profitability = {self._min_profitability},thus can not create orders"
+#            )
             return
 
         if self._current_profitability[1] > self._current_profitability[0]:
@@ -438,6 +438,11 @@ cdef class ArbitrageStrategy(StrategyBase):
         quantized_buy_amount = buy_market.c_quantize_order_amount(buy_market_trading_pair_tuple.trading_pair, Decimal(best_amount))
         quantized_sell_amount = sell_market.c_quantize_order_amount(sell_market_trading_pair_tuple.trading_pair, Decimal(best_amount))
         quantized_order_amount = min(quantized_buy_amount, quantized_sell_amount)
+
+        self.log_with_clock(
+                logging.INFO,
+                f"c_process_market_pair_inner: best_amount = {best_amount},best_profitability = {best_profitability},sell_price = {sell_price},buy_price = {buy_price},quantized_buy_amount = {quantized_buy_amount},quantized_sell_amount = {quantized_sell_amount},quantized_order_amount = {quantized_order_amount}"
+        )
 
         if quantized_order_amount:
             if self._logging_options & self.OPTION_LOG_CREATE_ORDER:
