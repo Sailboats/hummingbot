@@ -566,10 +566,10 @@ cdef class ArbitrageStrategy(StrategyBase):
                 total_previous_step_base_amount + amount,
                 bid_price
             )
-            self.log_with_clock(
-                logging.INFO,
-                f"buy_fee = {buy_fee},sell_fee = {sell_fee}"
-            )
+#            self.log_with_clock(
+#                logging.INFO,
+#                f"buy_fee = {buy_fee},sell_fee = {sell_fee}"
+#            )
             # accumulated flat fees of exchange
             total_buy_flat_fees = self.c_sum_flat_fees(buy_market_trading_pair_tuple.quote_asset, buy_fee.flat_fees)
             total_sell_flat_fees = self.c_sum_flat_fees(sell_market_trading_pair_tuple.quote_asset, sell_fee.flat_fees)
@@ -583,10 +583,10 @@ cdef class ArbitrageStrategy(StrategyBase):
             net_sell_proceeds = total_bid_value_adjusted * (1 - sell_fee.percent) - total_sell_flat_fees
             net_buy_costs = total_ask_value_adjusted * (1 + buy_fee.percent) + total_buy_flat_fees
             profitability = net_sell_proceeds / net_buy_costs
-            self.log_with_clock(
-                logging.INFO,
-                f"total_bid_value_adjusted = {total_bid_value_adjusted},total_ask_value_adjusted = {total_ask_value_adjusted},net_sell_proceeds = {net_sell_proceeds},net_buy_costs = {net_buy_costs},profitability = {profitability}"
-            )
+#            self.log_with_clock(
+#                logging.INFO,
+#                f"total_bid_value_adjusted = {total_bid_value_adjusted},total_ask_value_adjusted = {total_ask_value_adjusted},net_sell_proceeds = {net_sell_proceeds},net_buy_costs = {net_buy_costs},profitability = {profitability}"
+#            )
             # if current step is within minimum profitability, set to best profitable order
             # because the total amount is greater than the previous step
             if profitability > (1 + self._min_profitability):
