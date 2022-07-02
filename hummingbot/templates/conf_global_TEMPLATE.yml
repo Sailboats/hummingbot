@@ -3,7 +3,7 @@
 #################################
 
 # For more detailed information: https://docs.hummingbot.io
-template_version: 23
+template_version: 24
 
 # Exchange configs
 bamboo_relay_use_coordinator: false
@@ -14,6 +14,9 @@ beaxy_secret_key: null
 
 binance_api_key: null
 binance_api_secret: null
+
+changelly_api_key: null
+changelly_api_secret: null
 
 binance_us_api_key: null
 binance_us_api_secret: null
