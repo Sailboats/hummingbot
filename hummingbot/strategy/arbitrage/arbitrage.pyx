@@ -397,6 +397,11 @@ cdef class ArbitrageStrategy(StrategyBase):
         self._current_profitability = \
             self.c_calculate_arbitrage_top_order_profitability(market_pair)
 
+        self.log_with_clock(
+            logging.INFO,
+            f"self._current_profitability = {self._current_profitability},self._min_profitability = {self._min_profitability}"
+        )
+        
         if (self._current_profitability[1] < self._min_profitability and
                 self._current_profitability[0] < self._min_profitability):
             self.log_with_clock(
