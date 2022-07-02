@@ -539,10 +539,10 @@ cdef class ArbitrageStrategy(StrategyBase):
                                                                sell_market_trading_pair_tuple,
                                                                buy_market_conversion_rate,
                                                                sell_market_conversion_rate)
-        self.log_with_clock(
-                logging.INFO,
-                f"buy_market_conversion_rate = {buy_market_conversion_rate},sell_market_conversion_rate = {sell_market_conversion_rate},profitable_orders = {profitable_orders}"
-        )
+#        self.log_with_clock(
+#                logging.INFO,
+#                f"buy_market_conversion_rate = {buy_market_conversion_rate},sell_market_conversion_rate = {sell_market_conversion_rate},profitable_orders = {profitable_orders}"
+#        )
         # check if each step meets the profit level after fees, and is within the wallet balance
         # fee must be calculated at every step because fee might change a potentially profitable order to unprofitable
         # market.c_get_fee returns a namedtuple with 2 keys "percent" and "flat_fees"
@@ -573,10 +573,10 @@ cdef class ArbitrageStrategy(StrategyBase):
             # accumulated flat fees of exchange
             total_buy_flat_fees = self.c_sum_flat_fees(buy_market_trading_pair_tuple.quote_asset, buy_fee.flat_fees)
             total_sell_flat_fees = self.c_sum_flat_fees(sell_market_trading_pair_tuple.quote_asset, sell_fee.flat_fees)
-            self.log_with_clock(
-                logging.INFO,
-                f"total_buy_flat_fees = {total_buy_flat_fees},total_sell_flat_fees = {total_sell_flat_fees}"
-            )
+#            self.log_with_clock(
+#                logging.INFO,
+#                f"total_buy_flat_fees = {total_buy_flat_fees},total_sell_flat_fees = {total_sell_flat_fees}"
+#            )
             # accumulated profitability with fees
             total_bid_value_adjusted += bid_price_adjusted * amount
             total_ask_value_adjusted += ask_price_adjusted * amount
