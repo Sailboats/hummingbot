@@ -852,7 +852,7 @@ cdef class BinanceExchange(ExchangeBase):
         return OrderType[binance_type]
 
     def supported_order_types(self):
-        return [OrderType.LIMIT, OrderType.LIMIT_MAKER]
+        return [OrderType.MARKET, OrderType.LIMIT, OrderType.LIMIT_MAKER]
 
     async def create_order(self,
                            trade_type: TradeType,
